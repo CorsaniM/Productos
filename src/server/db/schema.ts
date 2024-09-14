@@ -11,6 +11,9 @@ export const products = createTable("products", {
   barcode: text("barcode", { length: 50 }).notNull(),
   name: text("name", { length: 255 }).notNull(),
   description: text("description", { length: 500 }).default(""),
+  categoriesId: int("categoriesId")
+    .references(() => categories.id)
+    .notNull(),
   price: int("price").notNull(),
   stock: int("stock").default(0).notNull(),
   createdAt: int("created_at", { mode: "timestamp" })
@@ -18,6 +21,20 @@ export const products = createTable("products", {
     .notNull(),
   updatedAt: int("updatedAt", { mode: "timestamp" }),
 });
+
+export const categories = createTable("categories", {
+  id: int("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  name: text("name", { length: 255 }).notNull(),
+  description: text("description", { length: 500 }).default(""),
+  createdAt: int("created_at", { mode: "timestamp" })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updatedAt: int("updatedAt", { mode: "timestamp" }),
+});
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  products: many(products),
+}));
 
 export const invoices = createTable("invoices", {
   id: int("id", { mode: "number" }).primaryKey({ autoIncrement: true }),

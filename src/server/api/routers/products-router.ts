@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { products } from "~/server/db/schema";
+import { categories, invoiceProducts, products } from "~/server/db/schema";
 
 export const productsRouter = createTRPCRouter({
   // Crear un nuevo producto
@@ -11,6 +11,7 @@ export const productsRouter = createTRPCRouter({
         barcode: z.string().max(50),
         name: z.string().max(255),
         description: z.string().max(500).optional(),
+        categoriesId: z.number().default(1),
         price: z.number().positive(),
         stock: z.number().int().nonnegative(),
         createdAt: z.date().optional(),
@@ -36,7 +37,16 @@ export const productsRouter = createTRPCRouter({
 
   // Listar todos los productos
   list: publicProcedure.query(async ({ ctx }) => {
-    const allProducts = await ctx.db.query.products.findMany();
+    const allProducts = await ctx.db.query.products.findMany({
+      with: {
+        categories: true,
+        invoiceProducts: {
+          with: {
+            invoice: true,
+          },
+        },
+      },
+    });
     return allProducts;
   }),
 
@@ -50,6 +60,14 @@ export const productsRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const product = await ctx.db.query.products.findFirst({
         where: eq(products.id, input.id),
+        with: {
+          categories: true,
+          invoiceProducts: {
+            with: {
+              invoice: true,
+            },
+          },
+        },
       });
 
       return product;
@@ -63,6 +81,7 @@ export const productsRouter = createTRPCRouter({
         barcode: z.string().max(50).optional(),
         name: z.string().max(255).optional(),
         description: z.string().max(500).optional(),
+        categoriesId: z.number().default(1),
         price: z.number().positive().optional(),
         stock: z.number().int().nonnegative().optional(),
         updatedAt: z.date().optional(),
