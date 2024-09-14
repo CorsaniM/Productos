@@ -58,7 +58,19 @@ export const invoiceProductsRouter = createTRPCRouter({
 
       return invoice;
     }),
+  getbyproduct: publicProcedure
+    .input(
+      z.object({
+        productId: z.number(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const invoice = await ctx.db.query.invoiceProducts.findMany({
+        where: eq(invoiceProducts.productId, input.productId),
+      });
 
+      return invoice.length;
+    }),
   // Actualizar un invoiceo existente
   update: publicProcedure
     .input(
