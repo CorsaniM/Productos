@@ -52,7 +52,7 @@ setOpen(false)
       <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Asignar usuarios a Esta</DialogTitle>
+            <DialogTitle>Crear categoria</DialogTitle>
           </DialogHeader>
           
               <Card className="p-5">
@@ -84,7 +84,7 @@ setOpen(false)
               {isPending && (
                 <Loader2Icon className="mr-2 animate-spin" size={20} />
               )}
-              Agregar producto
+              Agregar categoria
             </Button>
             <Button disabled={isPending} onClick={()=>setOpen(false)}>
               

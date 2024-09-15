@@ -1,7 +1,7 @@
 "use client"
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AccordionContent, AccordionItem } from "~/components/ui/accordion";
 import { Button } from "~/components/ui/button";
@@ -10,35 +10,76 @@ import { DialogHeader, DialogFooter, DialogTitle, DialogContent, Dialog } from "
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { api } from "~/trpc/react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
 export default function CrearProducto(){
 
 const {mutateAsync: createProduct, isPending} = api.products.create.useMutation()
+const { mutateAsync: createCategory } = api.categories.create.useMutation();
+const {data: categories} = api.categories.list.useQuery()
 
 const [open, setOpen] = useState(false)
 const [name, setName] = useState("")
+const [category, setCategory] = useState("");
+  const [newCategory, setNewCategory] = useState("");
+  const [filteredCategories, setFilteredCategories] = useState(categories ?? []);
+
 const [price, setPrice] = useState("0")
 const [stock, setStock] = useState("0")
 const [barcode, setBarcode] = useState("")
 const router = useRouter()
 
+
+const handleCategorySearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const searchValue = e.target.value.toLowerCase();
+  const filtered = categories?.filter((cat) =>
+    cat.name.toLowerCase().includes(searchValue)
+  );
+  setFilteredCategories(filtered ?? []);
+  setNewCategory(searchValue)
+  console.log(newCategory)
+};
 async function handleCreate() {
+  if (name === "" || price === "0" || stock === "0") {
+    return toast.error("Ingrese todos los datos");
+  }
 
+  let categoryId = 1; 
+  if (!categories?.some(cat => cat.name === newCategory) && category === "") {
+   
+    const result = await createCategory({
+      name: newCategory,
+      description: newCategory,
+      createdAt: new Date,
+      updatedAt: new Date,
+    });
+    categoryId = result.id;
+  } else if (category) {
+    const selectedCategory = categories?.find(cat => cat.name === category ?? "");
+    if (selectedCategory) {
+      categoryId = selectedCategory.id;
+    }
+  }
 
-if(name === "" || price === "0" || stock === "0"){
-    return toast.error("Ingrese todos los datos")
-} 
-await createProduct({
-    barcode: barcode,
+  await createProduct({
+    barcode,
     name,
     price: Number(price),
     stock: Number(stock),
-    categoriesId: 1
-})
-toast.success("Producto creado correctamente");
-router.refresh()
-setOpen(false)
+    categoriesId: categoryId
+  });
+
+  toast.success("Producto creado correctamente");
+  router.refresh();
+  setOpen(false);
 }
+
+useEffect(() => {
+  if (categories) {
+    setFilteredCategories(categories);
+    setCategory("");
+  }
+}, [categories]);
 
 
     return(
@@ -103,6 +144,25 @@ setOpen(false)
                       onChange={(e) => setBarcode(e.target.value)}
                     />
               </div>
+              <Label htmlFor="category">Categoria</Label>
+              <Label htmlFor="category">Categoría</Label>
+            <Input
+              id="category-search"
+              placeholder="Crear categoría..."
+              onChange={handleCategorySearch}
+            />
+            <Select onValueChange={setCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id.toString()}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Card>
               <DialogFooter>
             <Button disabled={isPending} onClick={handleCreate}>
