@@ -32,8 +32,12 @@ export const categories = createTable("categories", {
   updatedAt: int("updatedAt", { mode: "timestamp" }),
 });
 
-export const categoriesRelations = relations(categories, ({ many }) => ({
-  products: many(products),
+export const productsRelations = relations(products, ({ many, one }) => ({
+  category: one(categories, {
+    fields: [products.categoriesId],
+    references: [categories.id],
+  }),
+  invoiceProducts: many(invoiceProducts),
 }));
 
 export const invoices = createTable("invoices", {
@@ -45,9 +49,6 @@ export const invoices = createTable("invoices", {
     .notNull(),
   updatedAt: int("updated_at", { mode: "timestamp" }),
 });
-export const invoiceRelations = relations(invoices, ({ many }) => ({
-  invoiceProducts: many(invoiceProducts),
-}));
 
 export const invoiceProducts = createTable("invoice_products", {
   id: int("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -65,9 +66,20 @@ export const invoiceProducts = createTable("invoice_products", {
     .notNull(),
   updatedAt: int("updated_at", { mode: "timestamp" }),
 });
+export const invoiceRelations = relations(invoices, ({ many }) => ({
+  invoiceProducts: many(invoiceProducts),
+}));
+
 export const invoiceProductsRelations = relations(
   invoiceProducts,
-  ({ many }) => ({
-    products: many(products),
+  ({ one }) => ({
+    product: one(products, {
+      fields: [invoiceProducts.productId],
+      references: [products.id],
+    }),
+    invoice: one(invoices, {
+      fields: [invoiceProducts.invoiceId],
+      references: [invoices.id],
+    }),
   }),
 );

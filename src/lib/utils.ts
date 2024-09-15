@@ -1,5 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { db } from "~/server/db";
+import { products } from "~/server/db/schema";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -28,5 +30,30 @@ export async function fetchProductData(barcode: string) {
   } catch (error) {
     console.error("Error fetching product data:", error);
     return null;
+  }
+}
+export async function insertProduct(productData: {
+  barcode: string;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+}) {
+  try {
+    // Inserta el producto en la base de datos
+    await db.insert(products).values({
+      barcode: productData.barcode,
+      name: productData.name,
+      description: productData.description,
+      price: productData.price,
+      stock: productData.stock,
+      categoriesId: 1,
+      // createdAt y updatedAt son gestionados automáticamente si tu esquema lo tiene configurado
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error inserting product:", error);
+    return { success: false, error: "Failed to insert product." };
   }
 }

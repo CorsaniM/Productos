@@ -39,7 +39,7 @@ export const productsRouter = createTRPCRouter({
   list: publicProcedure.query(async ({ ctx }) => {
     const allProducts = await ctx.db.query.products.findMany({
       with: {
-        categories: true,
+        category: true,
         invoiceProducts: {
           with: {
             invoice: true,
@@ -61,7 +61,7 @@ export const productsRouter = createTRPCRouter({
       const product = await ctx.db.query.products.findFirst({
         where: eq(products.id, input.id),
         with: {
-          categories: true,
+          category: true,
           invoiceProducts: {
             with: {
               invoice: true,

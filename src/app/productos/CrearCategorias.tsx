@@ -11,31 +11,28 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { api } from "~/trpc/react";
 
-export default function CrearProducto(){
+export default function CrearCategoria(){
 
-const {mutateAsync: createProduct, isPending} = api.products.create.useMutation()
+const {mutateAsync: createProduct, isPending} = api.categories.create.useMutation()
 
 const [open, setOpen] = useState(false)
 const [name, setName] = useState("")
-const [price, setPrice] = useState("0")
-const [stock, setStock] = useState("0")
-const [barcode, setBarcode] = useState("")
+const [description, setDescription] = useState("")
 const router = useRouter()
 
 async function handleCreate() {
 
 
-if(name === "" || price === "0" || stock === "0"){
+if(!name || !description){
     return toast.error("Ingrese todos los datos")
 } 
 await createProduct({
-    barcode: barcode,
     name,
-    price: Number(price),
-    stock: Number(stock),
-    categoriesId: 1
+    description,
+    createdAt: new Date,
+    updatedAt: new Date,
 })
-toast.success("Producto creado correctamente");
+toast.success("Categoria creado correctamente");
 router.refresh()
 setOpen(false)
 }
@@ -50,7 +47,7 @@ setOpen(false)
         className="m-2 px-4 py-2 text-white disabled:opacity-50 text-lg rounded-full bg-gray-800 border hover:bg-gray-500 hover:text-black"
         onClick={() => setOpen(true)}
         >
-        Crear producto manualmente
+        Crear categoria
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[425px]">
@@ -70,39 +67,17 @@ setOpen(false)
                     />
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Label htmlFor="name">Precio $</Label>
+          <Label htmlFor="name">Descripcion</Label>
 
           <Input
-                      id="name"
+                      id="Description"
                        placeholder="ej: $10.00"
-                      value={price}
-                      type="number"
-                      onChange={(e) => setPrice(e.target.value)}
+                      value={description}
+                      type="description"
+                      onChange={(e) => setDescription(e.target.value)}
                     />
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Label htmlFor="name">Cantidad en stock</Label>
-          <Input
-                      id="name"
-                      value={stock}
-                      placeholder="100"
-
-                      type="number"
-                      min={0}
-                      onChange={(e) => setStock(e.target.value)}
-                    />
-              </div>
-              <Label htmlFor="name">Codigo de barras</Label>
-          <div>    
-          <Input
-                      id="name"
-                      value={barcode}
-                      placeholder="100"
-
-                      type="number"
-                      onChange={(e) => setBarcode(e.target.value)}
-                    />
-              </div>
+        
           </Card>
               <DialogFooter>
             <Button disabled={isPending} onClick={handleCreate}>

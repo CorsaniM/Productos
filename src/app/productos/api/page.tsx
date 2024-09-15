@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { api } from "~/trpc/react"; // Suponiendo que estás usando TRPC
-import { insertProduct } from "~/lib/insertProduct"; // Función que ya hemos creado
 
 const ProductPage = () => {
   const [barcode, setBarcode] = useState("");
@@ -30,7 +29,6 @@ const ProductPage = () => {
     }
   };
 
-  // Insertar el producto en la base de datos
   const handleInsertProduct = async () => {
     setLoading(true);
     setError(null);

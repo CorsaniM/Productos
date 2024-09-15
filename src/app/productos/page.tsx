@@ -8,7 +8,7 @@ import Link from "next/link";
 import LayoutContainer from "~/components/layout-container";
 import { GoBackArrow } from "~/components/goback-button";
 
-export default function AsignarPrecios(){
+export default function CrearCategoria(){
 
     const {data: precios} = api.products.list.useQuery()
 
@@ -28,6 +28,7 @@ export default function AsignarPrecios(){
                href="/productos/barcode">Crear por codigo de barras
                </Link>
              <CrearProducto/>
+             <CrearCategoria/>
               </div>
              <List>
           {precios ? precios.map((precio) => {
