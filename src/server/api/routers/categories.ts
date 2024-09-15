@@ -20,8 +20,8 @@ export const categoriesRouter = createTRPCRouter({
         .insert(categories)
         .values({
           ...input,
-          createdAt: input.createdAt || new Date(),
-          updatedAt: input.updatedAt || new Date(),
+          createdAt: input.createdAt ?? new Date(),
+          updatedAt: input.updatedAt ?? new Date(),
         })
         .returning();
 
@@ -69,7 +69,7 @@ export const categoriesRouter = createTRPCRouter({
         .update(categories)
         .set({
           ...input,
-          updatedAt: input.updatedAt || new Date(),
+          updatedAt: input.updatedAt ?? new Date(),
         })
         .where(eq(categories.id, input.id))
         .returning();

@@ -20,8 +20,8 @@ export const invoicesRouter = createTRPCRouter({
         .insert(invoices)
         .values({
           ...input,
-          createdAt: input.createdAt || new Date(),
-          updatedAt: input.updatedAt || new Date(),
+          createdAt: input.createdAt ?? new Date(),
+          updatedAt: input.updatedAt ?? new Date(),
         })
         .returning();
 
@@ -72,7 +72,7 @@ export const invoicesRouter = createTRPCRouter({
         .update(invoices)
         .set({
           ...input,
-          updatedAt: input.updatedAt || new Date(),
+          updatedAt: input.updatedAt ?? new Date(),
         })
         .where(eq(invoices.id, input.id))
         .returning();

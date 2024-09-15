@@ -7,17 +7,18 @@ import CrearProducto from "./CrearProductoManual";
 import Link from "next/link";
 import LayoutContainer from "~/components/layout-container";
 import { GoBackArrow } from "~/components/goback-button";
+import CrearCategoria from "./CrearCategorias";
 
-export default function CrearCategoria(){
+export default function Productos(){
 
-    const {data: precios} = api.products.list.useQuery()
-
-
-    async function handleCreate() {
+    // const {data: precios} = api.products.list.useQuery()
 
 
+    // async function handleCreate() {
 
-    }
+
+
+    // }
     return(
         <LayoutContainer>
           <GoBackArrow/>
@@ -31,7 +32,7 @@ export default function CrearCategoria(){
              <CrearCategoria/>
               </div>
              <List>
-          {precios ? precios.map((precio) => {
+          {/* {precios ? precios.map((precio) => {
             return (
               <ListTile
                 key={precio.id}
@@ -39,7 +40,7 @@ export default function CrearCategoria(){
                 title={precio.name}
               />
             );
-          }) : (<h1>No existen precios asociados</h1>)}
+          }) : (<h1>No existen precios asociados</h1>)} */}
         </List>
         </LayoutContainer>
     )

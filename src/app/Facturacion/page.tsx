@@ -45,8 +45,8 @@ export default function BarcodeScanner () {
           if (data.status === 1) { // Verifica si el producto está en la base de datos
             return {
               id: itemId,
-              name: data.product.product_name || 'Nombre no disponible',
-              image: data.product.image_url || 'Imagen no disponible',
+              name: data.product.product_name ?? 'Nombre no disponible',
+              image: data.product.image_url ?? 'Imagen no disponible',
               price: 'Precio no disponible', // Open Food Facts no proporciona precios
             };
           } else {

@@ -1,7 +1,7 @@
 "use client";
 import { OrganizationSwitcher, UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { useCheckRole } from "~/lib copy/react/roles";
+import { useCheckRole } from "~/lib/react/roles";
 
 export default function Upbar() {
   const { user } = useUser();

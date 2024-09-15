@@ -67,7 +67,7 @@ export function asTRPCError(error: any) {
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export function asZODError<T>(error: any) {
-  if (error instanceof ZodError || error.name === "ZodError") {
+  if (error instanceof ZodError ?? error.name === "ZodError") {
     return error as ZodError<T>;
   }
 
@@ -78,7 +78,7 @@ export function asZODError<T>(error: any) {
 export function isTRPCClientError(
   error: any,
 ): error is TRPCClientError<AppRouter> {
-  return error instanceof TRPCClientError || error.name === "TRPCClientError";
+  return error instanceof TRPCClientError ?? error.name === "TRPCClientError";
 }
 
 export function validateWithZod<T>(value: T, schema: z.Schema<T>) {
@@ -102,11 +102,11 @@ export function useValidationError<T>(value: T, schema: z.Schema<T>) {
 
 export function useValidationErrorMessages<T>(value: T, schema: z.Schema<T>) {
   return (
-    useValidationError(value, schema)?.issues.map((issue) => issue.message) ||
+    useValidationError(value, schema)?.issues.map((issue) => issue.message) ??
     null
   );
 }
 
 export function useValidationErrorMessage<T>(value: T, schema: z.Schema<T>) {
-  return useValidationErrorMessages(value, schema)?.[0] || null;
+  return useValidationErrorMessages(value, schema)?.[0] ?? null;
 }

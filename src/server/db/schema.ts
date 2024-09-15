@@ -4,7 +4,7 @@
 import { relations, sql } from "drizzle-orm";
 import { index, int, sqliteTableCreator, text } from "drizzle-orm/sqlite-core";
 
-export const createTable = sqliteTableCreator((name) => `sitp_${name}`);
+export const createTable = sqliteTableCreator((name) => `products_${name}`);
 
 export const products = createTable("products", {
   id: int("id", { mode: "number" }).primaryKey({ autoIncrement: true }),

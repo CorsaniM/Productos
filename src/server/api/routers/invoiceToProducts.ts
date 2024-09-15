@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { db } from "~/server/db";
 import { invoiceProducts } from "~/server/db/schema";
 
 export const invoiceProductsRouter = createTRPCRouter({
@@ -23,8 +22,8 @@ export const invoiceProductsRouter = createTRPCRouter({
         .insert(invoiceProducts)
         .values({
           ...input,
-          createdAt: input.createdAt || new Date(),
-          updatedAt: input.updatedAt || new Date(),
+          createdAt: input.createdAt ?? new Date(),
+          updatedAt: input.updatedAt ?? new Date(),
         })
         .returning();
 
@@ -37,9 +36,7 @@ export const invoiceProductsRouter = createTRPCRouter({
 
   // Listar todos los invoiceos
   list: publicProcedure.query(async ({ ctx }) => {
-    const allinvoiceProducts = await ctx.db.query.invoiceProducts.findMany({
-      with: { products: true },
-    });
+    const allinvoiceProducts = await ctx.db.query.invoiceProducts.findMany({});
     return allinvoiceProducts;
   }),
 
@@ -53,7 +50,6 @@ export const invoiceProductsRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const invoice = await ctx.db.query.invoiceProducts.findFirst({
         where: eq(invoiceProducts.id, input.id),
-        with: { products: true },
       });
 
       return invoice;
