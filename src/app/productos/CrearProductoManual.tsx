@@ -9,24 +9,28 @@ import { Card } from "~/components/ui/card";
 import { DialogHeader, DialogFooter, DialogTitle, DialogContent, Dialog } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { api } from "~/trpc/react";
+import { api, RouterOutputs } from "~/trpc/react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
-export default function CrearProducto(){
+
+interface Producto {
+  producto?: RouterOutputs["products"]["get"] | null
+} 
+export default function CrearProducto({producto}: Producto) {
 
 const {mutateAsync: createProduct, isPending} = api.products.create.useMutation()
 const { mutateAsync: createCategory } = api.categories.create.useMutation();
 const {data: categories} = api.categories.list.useQuery()
 
 const [open, setOpen] = useState(false)
-const [name, setName] = useState("")
-const [category, setCategory] = useState("");
+const [name, setName] = useState(producto?.name ?? "")
+const [category, setCategory] = useState(producto?.categoriesId ?? "");
   const [newCategory, setNewCategory] = useState("");
   const [filteredCategories, setFilteredCategories] = useState(categories ?? []);
 
-const [price, setPrice] = useState("0")
-const [stock, setStock] = useState("0")
-const [barcode, setBarcode] = useState("")
+const [price, setPrice] = useState(producto?.price ??"0")
+const [stock, setStock] = useState(producto?.stock ?? "0")
+const [barcode, setBarcode] = useState(producto?.barcode ?? "")
 const router = useRouter()
 
 
@@ -55,10 +59,11 @@ async function handleCreate() {
     });
     categoryId = result.id;
   } else if (category) {
-    const selectedCategory = categories?.find(cat => cat.name === category ?? "");
-    if (selectedCategory) {
-      categoryId = selectedCategory.id;
-    }
+    const selectedCategory = categories?.find(cat => cat.name === category);
+if (selectedCategory) {
+  categoryId = selectedCategory.id;
+}
+    
   }
 
   await createProduct({
@@ -88,15 +93,16 @@ useEffect(() => {
        <div>
 
         <Button
-        className="m-2 px-4 py-2 text-white disabled:opacity-50 text-lg rounded-full bg-gray-800 border hover:bg-gray-500 hover:text-black"
+        // className="m-2 px-4 py-2 text-white disabled:opacity-50 text-lg rounded-full bg-gray-800 border hover:bg-gray-500 hover:text-black"
+        variant={"default"}
         onClick={() => setOpen(true)}
         >
-        Crear producto manualmente
+        {producto ? `Editar` : " Crear producto nuevo"}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Asignar usuarios a Esta</DialogTitle>
+            <DialogTitle>{producto ? `Editar producto: ${producto?.name}` : " Crear producto manualmente"}</DialogTitle>
           </DialogHeader>
           
               <Card className="p-5">

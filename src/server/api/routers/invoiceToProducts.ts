@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { invoiceProducts } from "~/server/db/schema";
+import { invoiceProducts, invoices, products } from "~/server/db/schema";
 
 export const invoiceProductsRouter = createTRPCRouter({
   // Crear un nuevo invoiceo
@@ -39,7 +39,45 @@ export const invoiceProductsRouter = createTRPCRouter({
     const allinvoiceProducts = await ctx.db.query.invoiceProducts.findMany({});
     return allinvoiceProducts;
   }),
+  salesCount: publicProcedure.query(async ({ ctx }) => {
+    const result = await ctx.db
+      .select({
+        totalSales: sql<number>`SUM(${invoiceProducts.quantity})`.as(
+          "totalSales",
+        ),
+      })
+      .from(invoiceProducts);
 
+    return result[0]?.totalSales ?? 0;
+  }),
+  totalRevenue: publicProcedure.query(async ({ ctx }) => {
+    const result = await ctx.db
+      .select({
+        totalRevenue: sql<number>`SUM(${invoices.totalAmount})`.as(
+          "totalRevenue",
+        ),
+      })
+      .from(invoices);
+
+    return result[0]?.totalRevenue ?? "0";
+  }),
+  topProducts: publicProcedure.query(async ({ ctx }) => {
+    const result = await ctx.db
+      .select({
+        productId: invoiceProducts.productId,
+        productName: products.name,
+        totalQuantity: sql<number>`SUM(${invoiceProducts.quantity})`.as(
+          "totalQuantity",
+        ),
+      })
+      .from(invoiceProducts)
+      .innerJoin(products, eq(invoiceProducts.productId, products.id))
+      .groupBy(invoiceProducts.productId)
+      .orderBy(sql`totalQuantity DESC`)
+      .limit(5);
+
+    return result;
+  }),
   // Obtener un invoiceo por su ID
   get: publicProcedure
     .input(

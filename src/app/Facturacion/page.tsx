@@ -5,6 +5,7 @@ import { Button } from '../../components/button';
 import { redirect } from "next/navigation";
 import router from 'next/router';
 import Link from 'next/link';
+import AgregarManualmente from './agregarManualmente';
 
 interface ScannedItem {
   id: number;
@@ -23,6 +24,13 @@ export default function BarcodeScanner () {
     const [scanAllowed, setScanAllowed] = useState(true);
     const [itemId, setItemId] = useState<number>(1);
   
+
+  const [open, setOpen] = useState(false);
+  const [productosEnLista, setProductosEnLista] = useState<any[]>([]);
+  const agregarProductos = (productos: any[]) => {
+    setScannedItems((prev) => [...prev, ...productos]);
+  };
+
     useEffect(() => {
       codeReader.current = new BrowserMultiFormatReader();
   
@@ -132,7 +140,14 @@ export default function BarcodeScanner () {
         </button>
       </div>
       <div style={{ flex: 1 }}>
+        <div>
+        <AgregarManualmente
+        open={open}
+        setOpen={setOpen}
+        agregarProductos={agregarProductos} // Pasamos la función de agregar productos
+      />
         <h3>Códigos de Barras Escaneados:</h3>
+        </div>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
