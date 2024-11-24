@@ -16,6 +16,7 @@ export const productsRouter = createTRPCRouter({
         stock: z.number().int().nonnegative(),
         createdAt: z.date().optional(),
         updatedAt: z.date().optional(),
+        image: z.string().max(255).optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -85,6 +86,7 @@ export const productsRouter = createTRPCRouter({
         price: z.number().positive().optional(),
         stock: z.number().int().nonnegative().optional(),
         updatedAt: z.date().optional(),
+        image: z.string().max(255).optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {

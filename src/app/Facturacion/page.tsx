@@ -1,176 +1,208 @@
-"use client"
-import React, { useEffect, useRef, useState } from 'react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
-import { Button } from '../../components/button';
-import { redirect } from "next/navigation";
-import router from 'next/router';
-import Link from 'next/link';
-import AgregarManualmente from './agregarManualmente';
+"use client";
+import React, { useRef, useState } from "react";
+import { BrowserMultiFormatReader } from "@zxing/browser";
+import { Button } from "../../components/button";
+import { api } from "~/trpc/react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import AgregarManualmente from "./agregarManualmente";
+import { Input } from "~/components/ui/input";
 
-interface ScannedItem {
+interface Product {
   id: number;
   name: string;
-  image: string;
-  price: string;
+  price: number;
+  quantity: number;
 }
 
-export default function BarcodeScanner () {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const codeReader = useRef<BrowserMultiFormatReader | null>(null);
-    const [isScanning, setIsScanning] = useState(false);
-    const [scannedItems, setScannedItems] = useState<ScannedItem[]>([]);
-    const [buttonColor, setButtonColor] = useState<string>('red');
-    const [scanningTimeout, setScanningTimeout] = useState<NodeJS.Timeout | null>(null);
-    const [scanAllowed, setScanAllowed] = useState(true);
-    const [itemId, setItemId] = useState<number>(1);
-  
+export default function Facturacion() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const codeReader = useRef<BrowserMultiFormatReader | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [productList, setProductList] = useState<Product[]>([]);
+  const [invoiceProducts, setInvoiceProducts] = useState<Product[]>([]);
 
-  const [open, setOpen] = useState(false);
-  const [productosEnLista, setProductosEnLista] = useState<any[]>([]);
-  const agregarProductos = (productos: any[]) => {
-    setScannedItems((prev) => [...prev, ...productos]);
+
+
+  // Start scanning for barcodes
+  const startScanning = () => {
+    codeReader.current = new BrowserMultiFormatReader();
+    codeReader.current.decodeFromVideoDevice(undefined, videoRef.current!, (result) => {
+      if (result) {
+        const barcode = result.getText();
+        handleAddScannedProduct(barcode);
+      }
+    });
+    setIsScanning(true);
   };
 
-    useEffect(() => {
-      codeReader.current = new BrowserMultiFormatReader();
-  
-      return () => {
-        // Limpiamos recursos cuando el componente se desmonta
-        if (videoRef.current && videoRef.current.srcObject) {
-          const stream = videoRef.current.srcObject as MediaStream;
-          stream.getTracks().forEach((track) => track.stop());
-        }
-      };
-    }, []);
-  
-    const fetchProductInfo = async (barcode: string) => {
-        try {
-          const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-          if (!response.ok) {
-            throw new Error('Error al obtener información del producto');
-          }
-          const data = await response.json();
-          if (data.status === 1) { // Verifica si el producto está en la base de datos
-            return {
-              id: itemId,
-              name: data.product.product_name ?? 'Nombre no disponible',
-              image: data.product.image_url ?? 'Imagen no disponible',
-              price: 'Precio no disponible', // Open Food Facts no proporciona precios
-            };
-          } else {
-            throw new Error('Producto no encontrado');
-          }
-        } catch (error) {
-          console.error('Error en la solicitud a la API:', error);
-          return null;
-        }
-      };
-  
-    const startScanning = () => {
-      if (videoRef.current && scanAllowed) {
-        setScanAllowed(false); // Desactivar escaneo hasta que pase el tiempo de espera
-        codeReader.current?.decodeFromVideoDevice(undefined, videoRef.current, async (result, err) => {
-          if (result) {
-            const code = result.getText();
-            console.log("Código detectado:", code);
-  
-            const productInfo = await fetchProductInfo(code);
-            if (productInfo) {
-              setScannedItems((prev) => [...prev, productInfo]);
-              setItemId((prev) => prev + 1); // Incrementar el ID para el siguiente producto
-              setButtonColor('green'); // Cambia el color del botón a verde
-  
-              // Espera 3 segundos antes de permitir el siguiente escaneo
-              if (scanningTimeout) clearTimeout(scanningTimeout);
-              const timeout = setTimeout(() => {
-                setButtonColor('red'); // Vuelve el color del botón a rojo
-                setScanAllowed(true); // Permitir nuevo escaneo
-              }, 3000);
-              setScanningTimeout(timeout);
-            }
-          }
-          if (err) {
-            console.error("Error al escanear:", err);
-          }
-        });
-        setIsScanning(true);
-      }
-    };
-  
-    const stopScanning = () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => track.stop());
+  const stopScanning = () => {
+    if (codeReader.current) {
+      codeReader.current.decodeFromVideoDevice(undefined, videoRef.current!, (result) => {
+      
         setIsScanning(false);
-        if (scanningTimeout) clearTimeout(scanningTimeout); // Limpiar el temporizador si se detiene el escaneo
-        setScanAllowed(true); // Permitir escaneo si se detiene
-      }
-    };
+      });
+      
+  };
+  }
+  const toggleScanning = () => {
+    isScanning ? stopScanning() : startScanning();
+  };
+
+  const handleAddScannedProduct = (barcode: string) => {
+    // Aquí puedes conectar la API para buscar productos por código de barras
+    const product = productList.find((p) => p.id.toString() === barcode); // Simulación
+    if (product) {
+      setInvoiceProducts((prev) => [...prev, product]);
+    } else {
+      console.error("Producto no encontrado.");
+    }
+  };
+
+  const handleAddManualProduct = (product: Product) => {
+    setInvoiceProducts((prev) => [...prev, product]);
+  };
+
+  // API Mutations
+const router =useRouter()
+  const {mutateAsync: createInvoice} = api.invoice.create.useMutation({})
+  const {mutateAsync: CreateProductList} = api.invoiceProducts.create.useMutation({})
+
+
+
+  const handleCreateInvoice = async () => {
+    const totalAmount = invoiceProducts.reduce((sum, p) => sum + p.price, 0);
+    const invoice = await createInvoice({
+      customerName: "John Doe",
+      totalAmount: totalAmount.toFixed(2),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    for (const product of invoiceProducts) {
+      await CreateProductList({
+        invoiceId: invoice.id,
+        productId: product.id,
+        priceAtPurchase: product.price.toFixed(2),
+        quantity: 1,
+        totalPrice: product.price.toFixed(2),
+      });
+    }
+
+    // Limpia la lista después de crear la factura
+    setInvoiceProducts([]);
+    toast.message("Factura creada:", invoice);
+    router.push(`/facturas/${invoice.id}`);
+
+
+  };
+
+const [openAddManualProduct, setOpenAddManualProduct] = useState(false);
+const [productosFactura, setProductosFactura] = useState([]);
+
+const agregarProductos = (productos: any) => {
+  setInvoiceProducts((prev) => [...prev, ...productos]);
+};
   
-    const toggleScanning = () => {
-      if (isScanning) {
-        stopScanning();
-      } else {
-        startScanning();
-      }
-    };
-
-  
-
-  return (
-      <div>
-        <Button className="ml-3 mt-5"><Link href="/">Volver atras</Link></Button>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-      <div style={{ flex: 1, marginRight: '20px', marginLeft: "20px" }}>
-        <br />
-        <video ref={videoRef} style={{ width: '40%', height: 'auto', border: '2px solid black' }} />
-        <button 
-          onClick={toggleScanning} 
-          style={{ 
-            marginTop: '10px', 
-            backgroundColor: buttonColor, 
-            color: 'white', 
-            border: 'none', 
-            padding: '10px', 
-            cursor: 'pointer' 
-          }}
-        >
-          {isScanning ? 'Apagar Cámara' : 'Encender Cámara'}
-        </button>
-      </div>
-      <div style={{ flex: 1 }}>
-        <div>
-        <AgregarManualmente
-        open={open}
-        setOpen={setOpen}
-        agregarProductos={agregarProductos} // Pasamos la función de agregar productos
-      />
-        <h3>Códigos de Barras Escaneados:</h3>
-        </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Imagen</th>
-              <th>Precio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {scannedItems.map(item => (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>{item.name}</td>
-                <td><img src={item.image} alt={item.name} style={{ width: '100px' }} /></td>
-                <td>{item.price}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    </div>
-
+const actualizarProducto = (id: number, key: string, value: number) => {
+  setInvoiceProducts((prev) =>
+    prev.map((product) =>
+      product.id === id ? { ...product, [key]: value } : product
+    )
   );
 };
+
+const eliminarProducto = (id: number) => {
+  setInvoiceProducts((prev) => prev.filter((product) => product.id !== id));
+};
+
+return (
+  <div className="flex flex-col h-screen p-4 space-y-4">
+    {/* Botones superiores */}
+    <div className="flex justify-between items-center">
+      <div className="space-x-4">
+        <Button onClick={toggleScanning}>
+          {isScanning ? "Detener Escaneo" : "Iniciar Escaneo"}
+        </Button>
+        <Button onClick={() => setOpenAddManualProduct(true)}>
+          Agregar Producto Manualmente
+        </Button>
+      </div>
+    </div>
+
+    {/* Recuadro de la cámara */}
+    <div className="border border-gray-300 rounded-md p-4 flex justify-center items-center">
+      <video
+        ref={videoRef}
+        style={{ width: "300px", maxWidth: "350px", height: "auto", backgroundColor: "black" }}
+      />
+    </div>
+    <AgregarManualmente
+      agregarProductos={agregarProductos}
+      open={openAddManualProduct}
+      setOpen={setOpenAddManualProduct}
+    />
+    {/* Lista de productos */}
+    <div className="flex-grow overflow-auto border border-gray-300 rounded-md p-4">
+      <h3 className="text-lg font-bold mb-4">Productos en la Factura</h3>
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b">
+            <th className="text-left py-2 px-4">Producto</th>
+            <th className="text-left py-2 px-4">Cantidad</th>
+            <th className="text-left py-2 px-4">Precio</th>
+            <th className="text-left py-2 px-4">Total</th>
+            <th className="py-2 px-4">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoiceProducts.map((product) => (
+            <tr key={product.id} className="border-b">
+              <td className="py-2 px-4">{product.name}</td>
+              <td className="py-2 px-4">
+                <Input
+                  type="number"
+                  value={product.quantity}
+                  onChange={(e) =>
+                    actualizarProducto(product.id, "quantity", + e.target.value)
+                  }
+                />
+              </td>
+              <td className="py-2 px-4">
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={product.price}
+                  onChange={(e) =>
+                    actualizarProducto(product.id, "price", +e.target.value)
+                  }
+                />
+              </td>
+              <td className="py-2 px-4">
+                ${(product.quantity * product.price).toFixed(2)}
+              </td>
+              <td className="py-2 px-4">
+                <Button
+                  variant="destructive"
+                  onClick={() => eliminarProducto(product.id)}
+                >
+                  Eliminar
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {/* Botón de confirmación */}
+    <div className="flex justify-end">
+      <Button onClick={handleCreateInvoice} className="w-40">
+        Confirmar
+      </Button>
+    </div>
+
+   
+  </div>
+);
+}

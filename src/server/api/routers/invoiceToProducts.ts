@@ -36,7 +36,11 @@ export const invoiceProductsRouter = createTRPCRouter({
 
   // Listar todos los invoiceos
   list: publicProcedure.query(async ({ ctx }) => {
-    const allinvoiceProducts = await ctx.db.query.invoiceProducts.findMany({});
+    const allinvoiceProducts = await ctx.db.query.invoiceProducts.findMany({
+      with: {
+        product: true,
+      },
+    });
     return allinvoiceProducts;
   }),
   salesCount: publicProcedure.query(async ({ ctx }) => {

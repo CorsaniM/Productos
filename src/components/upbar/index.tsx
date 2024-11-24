@@ -6,9 +6,9 @@ import { useCheckRole } from "~/lib/react/roles";
 export default function Upbar() {
   const { user } = useUser();
   const isAdmin = useCheckRole("Admin");
-  if (isAdmin.hasRole === null) {
-    return <div className="flex w-screen h-16 drop-shadow-xl bg-blue-600 justify-between items-center p-5 font-semibold">Loading...</div>;
-  }
+  // if (isAdmin.hasRole === null) {
+  //   return <div className="flex w-screen h-16 drop-shadow-xl bg-blue-600 justify-between items-center p-5 font-semibold">Loading...</div>;
+  // }
 
   return (
     <div className="flex w-screen h-16 drop-shadow-xl bg-blue-600 justify-between items-center p-5 font-semibold">
